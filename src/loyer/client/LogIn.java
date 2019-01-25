@@ -22,30 +22,50 @@ public class LogIn extends LogInFrame {
   @Override
   public void logInEvent() {
     if(!isDataView) {
-      if(textField.getText().equals(list.get(0).getName())) {
+      
+      switch (textField.getText()) {
+      case "KM073PWR基板":
         isDataView = true;
         frame.dispose();
-        DataView.getDataView(Tables.KM073SMT, list.get(0).getName());
-      } else if(textField.getText().equals(list.get(1).getName())) {
+        DataView.getDataView(Tables.KM073SMT_HAVE, list.get(0).getName());
+        break;
+      case "KM073PWR基板(无CN6)":
         isDataView = true;
         frame.dispose();
-        DataView.getDataView(Tables.KM073UNIT, list.get(1).getName());
-      } else if(textField.getText().equals(list.get(2).getName())) {
+        DataView.getDataView(Tables.KM073SMT_NO, list.get(1).getName());
+        break;
+      case "KM073PWR完成品":
         isDataView = true;
         frame.dispose();
-        DataView.getDataView(Tables.KM033SMT, list.get(2).getName());
-      } else if(textField.getText().equals(list.get(3).getName())) {
+        DataView.getDataView(Tables.KM073UNIT_HAVE, list.get(2).getName());
+        break;
+      case "KM073PWR完成品(无CN6)":
         isDataView = true;
         frame.dispose();
-        DataView.getDataView(Tables.KM033UNIT, list.get(3).getName());
-      } else if(textField.getText().equals(list.get(4).getName())) {
+        DataView.getDataView(Tables.KM073UNIT_NO, list.get(3).getName());
+        break;
+      case "KM033PWR基板":
         isDataView = true;
         frame.dispose();
-        DataView.getDataView(Tables.KM017SMT, list.get(4).getName());
-      } else if(textField.getText().equals(list.get(5).getName())) {
+        DataView.getDataView(Tables.KM033SMT, list.get(4).getName());
+        break;
+      case "KM033PWR完成品":
         isDataView = true;
         frame.dispose();
-        DataView.getDataView(Tables.KM017UNIT, list.get(5).getName());
+        DataView.getDataView(Tables.KM033UNIT, list.get(5).getName());
+        break;
+      case "KM017PWR基板":
+        isDataView = true;
+        frame.dispose();
+        DataView.getDataView(Tables.KM017SMT, list.get(6).getName());
+        break;
+      case "KM017PWR完成品":
+        isDataView = true;
+        frame.dispose();
+        DataView.getDataView(Tables.KM017UNIT, list.get(7).getName());
+        break;
+      default:
+        break;
       }
     }
   }
