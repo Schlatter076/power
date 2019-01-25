@@ -267,6 +267,7 @@ public class DataView extends LoyerFrame {
     totalCount = okCount + ngCount;
     ngField.setText(ngCount + "");
     totalField.setText(totalCount + "");
+    setPieChart(okCount, ngCount);
     String[] rdData = new String[6];
     rdData[0] = tableName;
     rdData[1] = totalField.getText();
@@ -296,6 +297,7 @@ public class DataView extends LoyerFrame {
       totalCount = okCount + ngCount;
       okField.setText(okCount + "");
       totalField.setText(totalCount + "");
+      setPieChart(okCount, ngCount);
       String[] rdData = new String[6];
       rdData[0] = tableName;
       rdData[1] = totalField.getText();
