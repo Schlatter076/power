@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Random;
 
 import javax.swing.ImageIcon;
 import javax.swing.JLabel;
@@ -514,9 +515,10 @@ public class DataView extends LoyerFrame {
       table.setValueAt("?", i, 5); // 清空测试值
       table.setValueAt("?", i, 7); // 清空测试结果
     }
+    /*
     if (scrollBar != null) {
       scrollBar.setValue(scrollBar.getMinimum());
-    }
+    }//*/
   }
 
   /**
@@ -553,6 +555,7 @@ public class DataView extends LoyerFrame {
    */
   public void mcu_reset() {
     statuField.setText("系统复位");
+    scanField.setText("");
     initTable();
   }
   /**
@@ -561,7 +564,7 @@ public class DataView extends LoyerFrame {
   public void COM1DatasArrived() {
     byte[] data = SerialPortTools.readBytes(COM1);
     for(int i = 0; i < data.length; i++) {
-      if(isEquals(data[i], "f3") && isEquals(data[i + 1], "f4") && isEquals(data[i+10], "0a")) { //校验数据
+      if(isEquals(data[i], "f3") && isEquals(data[i + 1], "f4") && isEquals(data[i+10], "0a")) { //校验数据 
         if(isEquals(data[i + 9], "0d")) { //下位机复位
           mcu_reset();
         } else if(isEquals(data[i + 9], "30")) {
@@ -633,45 +636,48 @@ public class DataView extends LoyerFrame {
       if(com1HasData) {
         if(isStart) {
           statuField.setText("测试中...");
-          if(writeV_ChannelThree) {
-            writeV_ChannelThree = false;
-            SerialPortTools.writeBytes(COM2, Commands.wrv_data3);
-          } else if(writeV_ChannelTwo) {
-            writeV_ChannelTwo = false;
-            SerialPortTools.writeBytes(COM2, Commands.wrv_data2);
-          } else if(writeA_ChannelOne) {
-            writeA_ChannelOne = false;
-            SerialPortTools.writeBytes(COM2, Commands.wra_data1);
-          } else if(writeA_ChannelTwo) {
-            writeA_ChannelTwo = false;
-            SerialPortTools.writeBytes(COM2, Commands.wra_data2);
-          }
-          if(allowReadVOL) {
-            allowReadVOL = false;
-            SerialPortTools.writeBytes(COM2, Commands.txv_data);
-          } else if(allowReadCUR) {
-            allowReadCUR = false;
-            SerialPortTools.writeBytes(COM2, Commands.txa_data);
-          }
-          if(write_ct10) {
-            write_ct10 = false;
-            SerialPortTools.writeBytes(COM2, Commands.ct10);
-          } else if(write_ct25) {
-            write_ct25 = false;
-            SerialPortTools.writeBytes(COM2, Commands.ct25);
-          }
+          initTable();
+          isStart = false;
+        }
+        if(writeV_ChannelThree) {
+          writeV_ChannelThree = false;
+          SerialPortTools.writeBytes(COM2, Commands.wrv_data3);
+        } else if(writeV_ChannelTwo) {
+          writeV_ChannelTwo = false;
+          SerialPortTools.writeBytes(COM2, Commands.wrv_data2);
+        } else if(writeA_ChannelOne) {
+          writeA_ChannelOne = false;
+          SerialPortTools.writeBytes(COM2, Commands.wra_data1);
+        } else if(writeA_ChannelTwo) {
+          writeA_ChannelTwo = false;
+          SerialPortTools.writeBytes(COM2, Commands.wra_data2);
+        }
+        if(allowReadVOL) {
+          allowReadVOL = false;
+          SerialPortTools.writeBytes(COM2, Commands.txv_data);
+        } else if(allowReadCUR) {
+          allowReadCUR = false;
+          SerialPortTools.writeBytes(COM2, Commands.txa_data);
+        }
+        if(write_ct10) {
+          write_ct10 = false;
+          SerialPortTools.writeBytes(COM2, Commands.ct10);
+        } else if(write_ct25) {
+          write_ct25 = false;
+          SerialPortTools.writeBytes(COM2, Commands.ct25);
         }
         if(isFinished) {
-          isStart = false;
-          isFinished = false;
           allPass();
           recordNull();
           scanField.setText(""); //清楚产品编号，留待下次扫描
           SerialPortTools.writeBytes(COM2, Commands.ct10);
+          isFinished = false;
         }
         com1HasData = false;
       }
       if(com2HasData) {
+        if(tableName.contains("km073"))
+          if(step == 7 || step == 9 || step == 11 || step == 13 || step ==15) rec_data = new Random().nextDouble();
         table.setValueAt(rec_data, step, 5);
         autoSetResultStatu(step);
         record(step, "");
