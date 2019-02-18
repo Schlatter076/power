@@ -5,6 +5,8 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ItemEvent;
+import java.awt.event.ItemListener;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -12,6 +14,7 @@ import java.util.Date;
 import java.util.Random;
 
 import javax.swing.ImageIcon;
+import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPasswordField;
@@ -56,6 +59,7 @@ public class DataView extends LoyerFrame {
   private ArrayList<String> portList = SerialPortTools.findPort();
   private SerialPort COM1;
   private SerialPort COM2;
+  private String com3Str = "COM3";
   private SerialPort COM3;
   /**产品编号容器*/
   private ArrayList<String> numList = new ArrayList<>();
@@ -162,8 +166,34 @@ public class DataView extends LoyerFrame {
         
       }
     });
-    
-    
+    toolBar.addSeparator();
+    JComboBox<String> retrospectiveBox = new JComboBox<>();
+    //retrospectiveBox.setEditable(true);
+    retrospectiveBox.addItem("追溯串口:COM3");
+    for(int i = 1; i <= 20; i++) {
+      if(i != 3)
+        retrospectiveBox.addItem("追溯串口:COM" + i);
+    }
+    retrospectiveBox.addItemListener(new ItemListener() {
+      
+      @Override
+      public void itemStateChanged(ItemEvent e) {
+        if (statuField.getText().equals("测试中...")) {
+          JOptionPane.showMessageDialog(null, "测试进行中，不可操作！");
+          return;
+        }
+        else if(e.getStateChange() == ItemEvent.SELECTED){
+          String[] s = ((String) retrospectiveBox.getSelectedItem()).split(":");
+          com3Str = s[1];
+          if(COM3 != null) {
+            COM3.close();
+            COM3 = null;
+          }
+          initCOM3();
+        }
+      }
+    });
+    toolBar.add(retrospectiveBox);
   }
 
   @Override
@@ -497,11 +527,11 @@ public class DataView extends LoyerFrame {
    * 初始化串口3
    */
   public void initCOM3() {
-    if (portList.contains("COM3") && COM3 == null) {
+    if (portList.contains(com3Str) && COM3 == null) {
       try {
         COM3 = SerialPortTools.getPort(2);
       } catch (SerialPortParamFail | NotASerialPort | NoSuchPort | PortInUse e) {
-        JOptionPane.showMessageDialog(null, "COM3:" + e.toString());
+        JOptionPane.showMessageDialog(null, com3Str + e.toString());
       }
       com3Butt.setSelected(true);
       try {
@@ -516,7 +546,7 @@ public class DataView extends LoyerFrame {
           case SerialPortEvent.DSR: // 4 待发送数据准备好了
           case SerialPortEvent.RI: // 5 振铃指示
           case SerialPortEvent.OUTPUT_BUFFER_EMPTY: // 2 输出缓冲区已清空
-            JOptionPane.showMessageDialog(null, "COM3错误：" + arg0.toString());
+            JOptionPane.showMessageDialog(null, com3Str + arg0.toString());
             break;
           case SerialPortEvent.DATA_AVAILABLE: {
             //有数据到达
@@ -526,10 +556,10 @@ public class DataView extends LoyerFrame {
         });
         
       } catch (TooManyListeners e) {
-        JOptionPane.showMessageDialog(null, "COM3:" + e.toString());
+        JOptionPane.showMessageDialog(null, com3Str + e.toString());
       }
     } else {
-      JOptionPane.showMessageDialog(null, "未发现串口3！");
+      JOptionPane.showMessageDialog(null, "未发现" + com3Str + "！");
       com3Butt.setSelected(false);
     }
   }
@@ -584,6 +614,7 @@ public class DataView extends LoyerFrame {
     initTable();
     initCOM1();
     initCOM2();
+    initCOM3();
     timer1.start();
     scanField.requestFocusInWindow();  //防止扫描时找不到输入点
   }
