@@ -5,8 +5,6 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.FocusEvent;
-import java.awt.event.FocusListener;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -58,6 +56,9 @@ public class DataView extends LoyerFrame {
   private ArrayList<String> portList = SerialPortTools.findPort();
   private SerialPort COM1;
   private SerialPort COM2;
+  private SerialPort COM3;
+  /**产品编号容器*/
+  private ArrayList<String> numList = new ArrayList<>();
   /**串口1数据到达标志位*/
   private boolean com1HasData = false;
   /**串口2数据到达标志位*/
@@ -117,6 +118,13 @@ public class DataView extends LoyerFrame {
       } else
         com2Butt.setSelected(true);
     });
+    com3Butt.addActionListener(e -> {
+      if (COM3 == null) {
+        initCOM3();
+      } else
+        com3Butt.setSelected(true);
+    });
+    /*
     scanField.addFocusListener(new FocusListener() {
 
       @Override
@@ -127,7 +135,7 @@ public class DataView extends LoyerFrame {
       @Override
       public void focusGained(FocusEvent e) {
       }
-    });
+    });//*/
     scanField.setText("");  //清空扫描区域，以待扫描
     
     Document dt = statuField.getDocument();
@@ -299,6 +307,8 @@ public class DataView extends LoyerFrame {
       okField.setText(okCount + "");
       totalField.setText(totalCount + "");
       setPieChart(okCount, ngCount);
+      SerialPortTools.writeString(COM3, "UTF-8", scanField.getText() + SEPARATOR); //上传良品编号到MIS系统
+      numList.add(scanField.getText()); //添加良品编号，防止重复测试
       String[] rdData = new String[6];
       rdData[0] = tableName;
       rdData[1] = totalField.getText();
@@ -483,6 +493,46 @@ public class DataView extends LoyerFrame {
       com2Butt.setSelected(false);
     }
   }
+  /*
+   * 初始化串口3
+   */
+  public void initCOM3() {
+    if (portList.contains("COM3") && COM3 == null) {
+      try {
+        COM3 = SerialPortTools.getPort(2);
+      } catch (SerialPortParamFail | NotASerialPort | NoSuchPort | PortInUse e) {
+        JOptionPane.showMessageDialog(null, "COM3:" + e.toString());
+      }
+      com3Butt.setSelected(true);
+      try {
+        SerialPortTools.add(COM3, arg0 -> {
+          switch (arg0.getEventType()) {
+          case SerialPortEvent.BI: // 10 通讯中断
+          case SerialPortEvent.OE: // 7 溢位（溢出）错误
+          case SerialPortEvent.FE: // 9 帧错误
+          case SerialPortEvent.PE: // 8 奇偶校验错误
+          case SerialPortEvent.CD: // 6 载波检测
+          case SerialPortEvent.CTS: // 3 清除待发送数据
+          case SerialPortEvent.DSR: // 4 待发送数据准备好了
+          case SerialPortEvent.RI: // 5 振铃指示
+          case SerialPortEvent.OUTPUT_BUFFER_EMPTY: // 2 输出缓冲区已清空
+            JOptionPane.showMessageDialog(null, "COM3错误：" + arg0.toString());
+            break;
+          case SerialPortEvent.DATA_AVAILABLE: {
+            //有数据到达
+          }
+            break;
+          }
+        });
+        
+      } catch (TooManyListeners e) {
+        JOptionPane.showMessageDialog(null, "COM3:" + e.toString());
+      }
+    } else {
+      JOptionPane.showMessageDialog(null, "未发现串口3！");
+      com3Butt.setSelected(false);
+    }
+  }
   /**
    * 关闭串口
    */
@@ -496,6 +546,11 @@ public class DataView extends LoyerFrame {
       COM2.close();
       COM2 = null;
       com2Butt.setSelected(false);
+    }
+    if (COM3 != null) {
+      COM3.close();
+      COM3 = null;
+      com3Butt.setSelected(false);
     }
   }
 
@@ -556,6 +611,7 @@ public class DataView extends LoyerFrame {
   public void mcu_reset() {
     statuField.setText("系统复位");
     scanField.setText("");
+    scanField.requestFocusInWindow();
     initTable();
   }
   /**
@@ -569,8 +625,19 @@ public class DataView extends LoyerFrame {
           mcu_reset();
         } else if(isEquals(data[i + 9], "30")) {
           if(scanField.getText().length() > 0) { //如果扫描区有数据
-            isStart = true;
-            SerialPortTools.writeBytes(COM1, Commands.RESULT_OK);
+            if(numList.contains(scanField.getText())) {
+              int temp = JOptionPane.showConfirmDialog(null, "该产品已测试通过，点击'是(Y)'取消测试", "询问", JOptionPane.YES_NO_OPTION, JOptionPane.INFORMATION_MESSAGE);
+              if(temp == JOptionPane.YES_OPTION) {
+                isStart = false;
+                SerialPortTools.writeBytes(COM1, Commands.RESTART);//让下位机重新开始
+              } else {
+                isStart = true;
+                SerialPortTools.writeBytes(COM1, Commands.RESULT_OK);
+              }
+            } else {
+              isStart = true;
+              SerialPortTools.writeBytes(COM1, Commands.RESULT_OK);
+            }
           } else {
             isStart = false;
             SerialPortTools.writeBytes(COM1, Commands.RESTART);//让下位机重新开始
@@ -670,6 +737,7 @@ public class DataView extends LoyerFrame {
           allPass();
           recordNull();
           scanField.setText(""); //清楚产品编号，留待下次扫描
+          scanField.requestFocusInWindow();
           SerialPortTools.writeBytes(COM2, Commands.ct10);
           isFinished = false;
         }
