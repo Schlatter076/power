@@ -117,7 +117,7 @@ public class UsartTools {
     
     frame = new JFrame("调试助手");
     //frame.setResizable(false);  //窗口大小不可更改
-    frame.setIconImage(Toolkit.getDefaultToolkit().getImage(JFrame.class.getResource("/pic/Kyokuto.png")));
+    frame.setIconImage(Toolkit.getDefaultToolkit().getImage(JFrame.class.getResource("/pic/frame.jpg")));
     frame.setBounds(WIDTH / 4, HEIGHT / 6, WIDTH / 2, HEIGHT * 2 / 3);
     frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
     // 窗口"X"关闭事件

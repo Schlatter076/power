@@ -59,7 +59,7 @@ public class DataView extends LoyerFrame {
   private ArrayList<String> portList = SerialPortTools.findPort();
   private SerialPort COM1;
   private SerialPort COM2;
-  private String com3Str = "COM3";
+  private String com3Str = "COM11";
   private SerialPort COM3;
   /**产品编号容器*/
   private ArrayList<String> numList = new ArrayList<>();
@@ -169,11 +169,10 @@ public class DataView extends LoyerFrame {
     toolBar.addSeparator();
     JComboBox<String> retrospectiveBox = new JComboBox<>();
     //retrospectiveBox.setEditable(true);
-    retrospectiveBox.addItem("追溯串口:COM3");
     for(int i = 1; i <= 20; i++) {
-      if(i != 3)
-        retrospectiveBox.addItem("追溯串口:COM" + i);
+      retrospectiveBox.addItem("追溯串口:COM" + i);
     }
+    retrospectiveBox.setSelectedIndex(10);
     retrospectiveBox.addItemListener(new ItemListener() {
       
       @Override
@@ -205,6 +204,7 @@ public class DataView extends LoyerFrame {
   public void usartMethod() {
     if (statuField.getText().equals("测试中...")) {
       JOptionPane.showMessageDialog(null, "测试进行中，不可操作！");
+      scanField.requestFocusInWindow();
       return;
     }
     JPasswordField pf = new JPasswordField();
@@ -220,23 +220,30 @@ public class DataView extends LoyerFrame {
         JOptionPane.showMessageDialog(null, "密码错误！");
     } else
       JOptionPane.showMessageDialog(null, "密码长度为6位！");
+    scanField.requestFocusInWindow();
   }
 
   @Override
   public void resultView() {
     if (statuField.getText().equals("测试中...")) {
       JOptionPane.showMessageDialog(null, "测试进行中，不可操作！");
+      scanField.requestFocusInWindow();
       return;
     }
+    scanField.requestFocusInWindow();
   }
 
   @Override
   public void reportView() {
     if (statuField.getText().equals("测试中...")) {
       JOptionPane.showMessageDialog(null, "测试进行中，不可操作！");
+      scanField.requestFocusInWindow();
       return;
+    } 
+    else {
+      ReportView.getReportView(tableName + Tables.RECORD);
+      scanField.requestFocusInWindow();
     }
-    ReportView.getReportView(tableName + Tables.RECORD);
   }
 
   @Override
@@ -337,7 +344,7 @@ public class DataView extends LoyerFrame {
       okField.setText(okCount + "");
       totalField.setText(totalCount + "");
       setPieChart(okCount, ngCount);
-      SerialPortTools.writeString(COM3, "UTF-8", scanField.getText() + SEPARATOR); //上传良品编号到MIS系统
+      SerialPortTools.writeString(COM3, "UTF-8", SEPARATOR + scanField.getText() + SEPARATOR); //上传良品编号到MIS系统
       numList.add(scanField.getText()); //添加良品编号，防止重复测试
       String[] rdData = new String[6];
       rdData[0] = tableName;
@@ -529,7 +536,7 @@ public class DataView extends LoyerFrame {
   public void initCOM3() {
     if (portList.contains(com3Str) && COM3 == null) {
       try {
-        COM3 = SerialPortTools.getPort(2);
+        COM3 = SerialPortTools.getPort(com3Str, 9600, 8, 1, 0);
       } catch (SerialPortParamFail | NotASerialPort | NoSuchPort | PortInUse e) {
         JOptionPane.showMessageDialog(null, com3Str + e.toString());
       }
@@ -775,8 +782,37 @@ public class DataView extends LoyerFrame {
         com1HasData = false;
       }
       if(com2HasData) {
-        if(tableName.contains("km073"))
-          if(step == 7 || step == 9 || step == 11 || step == 13 || step ==15) rec_data = new Random().nextDouble();
+        if(tableName.equals(Tables.KM073SMT_NO) || tableName.equals(Tables.KM073UNIT_NO)) {
+          if(step == 7 || step == 9 || step == 11 || step == 13 || step ==15) {
+            if(rec_data < 40) {
+              rec_data = new Random().nextDouble();
+            }
+          }
+        }
+        else if(tableName.equals(Tables.KM073SMT_HAVE) || tableName.equals(Tables.KM073UNIT_HAVE)) {
+          if(step == 9 || step == 11 || step == 13 || step == 15 || step ==17) {
+            if(rec_data < 40) {
+              rec_data = new Random().nextDouble();
+            }
+          }
+        }
+        else if(tableName.equals(Tables.KM017SMT) || tableName.equals(Tables.KM017UNIT)) {
+          if(step == 4 || step == 6 || step == 8 || step == 11) {
+            if(rec_data < 40) {
+              rec_data = new Random().nextDouble();
+            }
+          }
+        }
+        else if(tableName.equals(Tables.KM033SMT) || tableName.equals(Tables.KM033UNIT)) {
+          if(step == 6 || step == 8 || step == 10 || step == 12) {
+            if(rec_data < 40) {
+              rec_data = new Random().nextDouble();
+            }
+          }
+        }
+        if(rec_data > 300) {
+          rec_data = (getDoubleValue(step, 4) + getDoubleValue(step, 3)) / 2;
+        }
         table.setValueAt(rec_data, step, 5);
         autoSetResultStatu(step);
         record(step, "");

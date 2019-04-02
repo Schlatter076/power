@@ -66,7 +66,7 @@ public class ReportView {
     frame = new JFrame("查看不良报告");
     frame.setBounds(WIDTH / 4, HEIGHT / 6, WIDTH / 2, HEIGHT * 2 / 3);
     frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
-    frame.setIconImage(Toolkit.getDefaultToolkit().getImage(JFrame.class.getResource("/pic/Kyokuto.png")));
+    frame.setIconImage(Toolkit.getDefaultToolkit().getImage(JFrame.class.getResource("/pic/frame.jpg")));
     //窗口添加关闭事件
     frame.addWindowListener(new WindowAdapter() {
       public void windowClosing(WindowEvent e) {
